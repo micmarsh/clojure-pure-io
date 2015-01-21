@@ -12,7 +12,7 @@
   [^java.io.Reader stdin]
   (clojure.lang.LineNumberingPushbackReader.
    (proxy [java.io.Reader] []
-     (close [_]
+     (close []
        (when-io (.close stdin)))
      (read [cbuf off len]
        (when-io

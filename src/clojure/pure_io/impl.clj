@@ -14,4 +14,4 @@
 (defio pprint)
 
 (def read-line' (as-io (read-line)))
-(def read' (as-io (read)))
+(def read-all' (as-io (slurp *in*)))
