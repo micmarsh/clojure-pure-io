@@ -17,4 +17,6 @@
    m-result (fn m-result-io [v]
               (IOResult. v))
    m-bind (fn m-bind-io [m f]
-            (IOBind. m f))])
+            (if (instance? IOResult m)
+              (f (.v m))
+              (IOBind. m f)))])

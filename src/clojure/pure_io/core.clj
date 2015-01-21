@@ -1,5 +1,5 @@
 (ns clojure.pure-io.core
-  (:require [clojure.pure-io.monad :refer (-perform-io)]))
+  (:require [clojure.pure-io.monad :refer (PerformIO -perform-io)]))
 
 (def ^{:dynamic true :private true} *performing-io* false)
 
@@ -10,7 +10,7 @@
 
 (defn- rebind-input
   [^java.io.Reader stdin]
-  (java.io.BufferedReader.
+  (clojure.lang.LineNumberingPushbackReader.
    (proxy [java.io.Reader] []
      (close [_]
        (when-io (.close stdin)))
@@ -34,8 +34,7 @@
        (binding [*performing-io* true]
          ~@body))))
 
-(defmacro perform-io!
-  [& statements]
-  `(binding [*in* (rebind-input *in*)
-             *out* (rebind-output *out*)]
-     (-perform-io (do ~@statements))))
+(defn perform-io! [io]
+  (binding [*in* (rebind-input *in*)
+            *out* (rebind-output *out*)]
+    (-perform-io io)))
