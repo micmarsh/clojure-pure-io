@@ -1,5 +1,5 @@
 (ns clojure.pure-io.monad
-  (:require [clojure.algo.monads :refer (defmonad)]))
+  (:require [clojure.algo.monads :refer (defmonad with-monad)]))
    
 (defprotocol PerformIO (-perform-io [io]))
 
@@ -18,5 +18,10 @@
               (IOResult. v))
    m-bind (fn m-bind-io [m f]
             (if (instance? IOResult m)
-              (f (.v m))
-              (IOBind. m f)))])
+             (f (.v m))
+             (IOBind. m f)))])
+
+(defmacro defn-io [name args & body]
+  `(defn ~name [~@args]
+     (with-monad io-m
+       ~@body)))
