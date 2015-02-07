@@ -15,14 +15,18 @@
 (defn io= [& io-exprs]
   (apply = (map eval-io-expr io-exprs)))
 
-(defn-io id-print [item]
+(deftest helper-functions
+  (testing "Eval helper returns output and expression result"
+    (is (= ["hello\n" nil]
+           (eval-io-expr (println' "hello"))))))
+
+(defn-io id-print
+;; An function (string -> IO string) whose result prints
+;; the given string as a side effect
+  [item]
   (m/domonad
    [_ (println' item)]
    item))
-
-(deftest helper-functions
-  (is (= ["hello\n" nil]
-         (eval-io-expr (println' "hello")))))
 
 (deftest monad-laws
   (m/with-monad io-m
