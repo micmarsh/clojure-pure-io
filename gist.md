@@ -72,8 +72,16 @@ As you can see, when `-perform-io` is called on something of this type, all it d
   (-perform-io [_]
     (-perform-io (f (-perform-io io)))))
 ```
-Much more exciting! To help figure out what's going on here, let's look at the Haskell type signature of `>>=`, which we'll call `m-bind` in Clojure
+Much more exciting! To help figure out what's going on here, let's look at the Haskell type signature of `>>=`:
 ```haskell
 (>>=) :: Monad m => m a -> (a -> m b) -> m b
 ```
-`Monad m =>` is saying "m must be a monad in this type signature", and `a` and `b` can be of any types whatsoever. They could even be the same, but they don't have to be.
+`Monad m =>` is saying "m must be a monad", and `a` and `b` can be of any types whatsoever. They could even be the same, but they don't have to be.
+
+* The first argument, `m a`, is a monad that can contain any type
+* The argument, `(a -> m b)`, is a function that takes a value of type of `a`, and returns a function of type `b`.
+* `m b` is the return value of `>>=`, a new monad containing something of type `b`
+
+Now, think of each instance of `IOBind` as a `m b`. Since we eventually want to perform some io action using `-perform-io`
+
+So how does all this relate to `m-bind`/`IOBind`? If you look at `IOBind`'s constructor, imagine `io` is `m a` and `f` is `(a -> m b)`. Since all of these IO monads represent an IO action to do *eventually*,`(f (-perform-io io))` could be thought of as
