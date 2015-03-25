@@ -10,8 +10,8 @@
     (m-bind read-line' println')))
 
 (defn bad-print [& args]
-  (apply println args)
-  (apply println' args))
+  (println args)
+  (println' args))
 
 (defn- bad-read []
   (read-line)
@@ -23,19 +23,20 @@
      (with-out-str ~@body)))
 
 (deftest basic-usage
-  (let [result (with-io "hello" (perform-io! echo))]
-      (is (= "hello\n" result))))
+  (testing "Simple usage works as expected"
+    (let [result (with-io "hello" (perform-io! echo))]
+      (is (= "hello\n" result)))))
 
 (deftest throws-exceptions
   (m/with-monad io-m
     (with-in-str "first line\nsecond line\nthird line"
 
-      (testing "Impure input throws exception"
+      (testing "Impure output throws exception"
         (is (thrown-with-msg?
              Exception #"Impure IO!"
              (perform-io! (m-bind echo bad-print)))))
 
-      (testing "Impure output throws exception"
+      (testing "Impure (slightly contrived) input throws exception"
         (is (thrown-with-msg?
              Exception #"Impure IO!"
              (perform-io! (m-bind echo (fn [_] (bad-read))))))))))
