@@ -20,7 +20,7 @@ No matter what we pass to each function, we'll always get the same result (or an
 and in a Haskell GHCI repl:
 ```Haskell
 let printPlusEight = print . (+ 8)
-let result = printPlusEight 3 ; doesn't print anything!
+let result = printPlusEight 3 -- doesn't print anything!
 :t result
 -- result :: IO ()
 result
@@ -32,19 +32,17 @@ In the Clojure example, `result` was of type `nil` because our function already 
 
 Haskell's type system makes this concept especially pervasive: every Haskell program has a `main` value, which must be something of type `IO ()`. If you need to do any impure operation, you'll need to compose your data structures so it all comes together at `main`. The static type checker will ensure that everything is in order before your program ever even compiles.
 
-## Implementing an IO Monad in Clojure
+While Clojure and Haskell pretty sharply diverge in the "static checking" department, we can still get pretty darn close to having enforcably pure IO in Clojure. If you're as geeked out by this stuff as I am, read on!
 
-With the above knowledge in mind, the natural next question to is: how can we do this in Clojure? If you're as geeked out by this stuff as I am, read on!
-
-### The Data Structure
+## The Data Structure
 
 Since we'll be passing around some data, but eventually using it to peform an actual IO operation, it makes sense to define a protocol for our data types to implement:
 ```clojure
 (defprotocol PerformIO (-perform-io [io]))
 ```
-Now that we have that, we can define some types, but first we need to attempt the world's shortest (and probably most incomplete) explaination of Monads.
+`-perform-io` will evaluate the given data structure, performing some side effects and returning a result. While it's going to play an important part in our monad implementation below, it's important to keep in mind that this doesn't necessarily have anything to do with monads, just our specific case.
 
-Monads are, for our purposes, a "container" type for another value. Slightly more specifically, a monad is a monad as opposed to some other type because it defines two operations: one for "wrapping" values in a new instance of that monad, and another for "transforming" (in a pure, functional way), the value inside the monad into a new value.
+Monads are, for our purposes, a "container" type for another value. Slightly more specifically, a monad is a monad because it defines two operations: one for "wrapping" values in a new instance of that monad, and another for "transforming" (in a pure, functional way), the value inside the monad into a new value.
 
 With that in mind, let's use `clojure.algo.monad`'s `defmonad` to define a monad of our very own:
 ```clojure
@@ -56,32 +54,34 @@ Althought I've deferred the actual work of the functions to two custom Clojure/J
 *  `m-result` (called `return` in Haskell) will wrap the given value `v` in an `io-m` monad
 *  `m-bind` (called `(>>=)` in Haskell), will use the function `f` to "transform" (again, purely functionally), the value inside the given monad `m`.
 
-#### IOResult for m-result
+### IOResult for m-result
  Let's a define a type to represent an instance of an IO monad returned by `m-result`
 ```clojure
 (deftype IOResult [v]
   PerformIO
   (-perform-io [_] v))
 ```
-As you can see, when `-perform-io` is called on something of this type, all it does is return the value passed into it. As a reminder, `-perform-io`, is NOT part of the definition of a monad, it's just something special we want to be able to do with our IO data. Either way, this type is pretty boring, so let's move on.
+As you can see, when `-perform-io` is called on something of this type, all it does is return the value passed into it. This type is pretty boring, so let's move on.
 
-#### IOBind for m-bind
+### IOBind for m-bind
 ```clojure
 (deftype IOBind [io f]
   PerformIO
   (-perform-io [_]
     (-perform-io (f (-perform-io io)))))
 ```
-Much more exciting! To help figure out what's going on here, let's look at the Haskell type signature of `>>=`:
+Much more exciting! To help figure out what's going on here, let's first let's look at the Haskell type signature of `>>=`:
 ```haskell
 (>>=) :: Monad m => m a -> (a -> m b) -> m b
 ```
-`Monad m =>` is saying "m must be a monad", and `a` and `b` can be of any types whatsoever. They could even be the same, but they don't have to be.
-
+* `Monad m =>` is saying "m must be a monad"
 * The first argument, `m a`, is a monad that can contain any type
-* The argument, `(a -> m b)`, is a function that takes a value of type of `a`, and returns a function of type `b`.
+ * this is the value `io` in `IOBind`'s constructor
+* The argument, `(a -> m b)`, is a function that takes a value of type of `a`, and returns a function of type `b`
+ * this is the function `f` in `IOBind`'s constructor
 * `m b` is the return value of `>>=`, a new monad containing something of type `b`
+ * this is an instance of `IOBind`
 
-Now, think of each instance of `IOBind` as a `m b`. Since we eventually want to perform some io action using `-perform-io`
+Now, remember how `-perform-io` executes the given IO action and returns a result? In the context of the above, we can think of `-perform-io` as a magical, non-monadic ([co-monadic, actually]()), function with type signature `m a -> a`, that takes a value *out* of its monad container.
 
-So how does all this relate to `m-bind`/`IOBind`? If you look at `IOBind`'s constructor, imagine `io` is `m a` and `f` is `(a -> m b)`. Since all of these IO monads represent an IO action to do *eventually*,`(f (-perform-io io))` could be thought of as
+If you "follow the types" (a very common admonishment in the Haskell community), and look at the implementation of `-perform-io` for `IOBind`, you should be able to see how everything lines up.
