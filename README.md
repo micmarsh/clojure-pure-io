@@ -1,6 +1,6 @@
 # Pure IO
 
-An experiment in implementing and enforcing an IO monad in Clojure. Why should Haskell have all the fun(ctional purity)?
+An experiment in implementing an IO monad in Clojure. Why should Haskell have all the fun(ctional purity)?
 
 For an in-depth (and slightly rambling) explaination of the motivations and process that went into this, check out [my write-up](/gist.md)
 
@@ -36,33 +36,18 @@ Include `[pure-io "0.1.0"]` and `[org.clojure/algo.monads "0.1.5"]` in project.c
 
 * Bask in the glory of your functional purity
 
-### The "Type System"
-Haskell enforces purity through static typing, in Clojure we can re-bind stdin and stdout within `perform-io!` to "force" pure operations. For example
-```clojure
-(defn bad-print [thing]
-  (println thing)
-  (println' thing))
-
-(def bad-echo
-  (with-monad io-m
-    (m-bind read-line' bad-print)))
-
-(perform-io! bad-echo)
-;; after reading input, throws exception
-```
-There are a million ways to sneak around this, but it's the best we can do without JVM hackery for now.
-
 ### Non-trivial Purposes
+
 If you're really feeling bold, you can easily define your own pure IO operations using the `as-io` macro
 ```clojure
-(defn database-query [args]
-  (as-io
-    (some-database-operation args)))
+(require '[clojure.pure-io.core :refer [as-io]])
+
+(defn pure-database-query [query]
+  (as-io (some-database-operation query)))
+
+(with-monad io-m
+  (def db-read-print
+    (m-bind (pure-database-query {:where ...})
+            (partial println' "Database query results:"))))
 ```
 `as-io` will return the code inside of it as an IO instance, for you to compose as you wish before calling `perform-io!` on it.
-
-## License
-
-Copyright © 2015 Michael Marsh
-
-Distributed under the Eclipse Public License version 1.0
