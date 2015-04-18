@@ -52,7 +52,7 @@
 
 (io/defn-io -main
   "Follow the prompts to guess the proper number between on and one hundre"
-  [& args]
+  [& _]
   (io/perform-io!
    (let [m-secret-number (rand-int' 1 101)]
      (m-bind m-secret-number number-game))))

@@ -1,15 +1,15 @@
 (ns clojure.pure-io.core
-  (:require [clojure.pure-io.monad :refer (PerformIO -perform-io)]))
+  (:require [clojure.pure-io.monad :refer (PerformIO -perform-io io-m)]
+            [clojure.algo.monads :refer (with-monad)]))
 
 (defmacro as-io [& body]
   `(reify PerformIO
      (-perform-io [_]
        ~@body)))
 
-(defn perform-io! [io]
-  (binding [*in* (rebind-input *in*)
-            *out* (rebind-output *out*)]
-    (-perform-io io)))
+(def perform-io!
+  "Core namespace wrapper for the protocol function"
+  -perform-io)
 
 (defmacro defn-io
   "A convenience wrapper for the way `clojure.algo.monads` makes you declare your monad type.

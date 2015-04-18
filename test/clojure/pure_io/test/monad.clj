@@ -1,6 +1,6 @@
 (ns clojure.pure-io.test.monad
   (:require [clojure.test :refer :all]
-            [clojure.pure-io.monad :refer (io-m defn-io)]
+            [clojure.pure-io.monad :refer (io-m)]
             [clojure.pure-io.core :as io]
             [clojure.pure-io.impl :refer (println')]
             [clojure.algo.monads :as m]))
@@ -20,7 +20,7 @@
     (is (= ["hello\n" nil]
            (eval-io-expr (println' "hello"))))))
 
-(defn-io id-print
+(io/defn-io id-print
 ;; An function (string -> IO string) whose result prints
 ;; the given string as a side effect
   [item]
