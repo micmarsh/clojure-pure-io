@@ -28,7 +28,7 @@ result
 ```
 Woah, wild! Haskell, unlike most other languages, uses data structures to represent impure operations, such as printing to the screen.
 
-In the Clojure example, `result` was of type `nil` because our function already printed and returned nothing, but in the Haskell example, our function just returned something of type `IO ()`, which means it's an IO action that hasn't actually happened yet, in that case printing "11" to the screen.
+In the Clojure example, `result` was of type `nil` because our function already printed and returned nothing, but in the Haskell example, our function just returned something of type `IO ()`, which means it's an IO action that hasn't actually happened yet, in that case printing `11` to the screen.
 
 Haskell's type system makes this concept especially pervasive: every Haskell program has a `main` value, which must be something of type `IO ()`. If you need to do any impure operation, you'll need to compose your data structures so it all comes together at `main`. The static type checker will ensure that everything is in order before your program ever even compiles.
 
