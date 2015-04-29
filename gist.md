@@ -57,7 +57,7 @@ and use it to create a pure version of `println`
 ```
 Now, we can re-implement our example from above
 ```clojure
-(def print-plus-eight (comp println! add-eight))
+(def print-plus-eight (comp println' add-eight))
 (def result (print-plus-eight 3)) ; doesn't print!
 (type result) ; => definitely not nil!
 
