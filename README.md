@@ -59,5 +59,8 @@ A [simple sorting example](/src/examples/clojure/pure_io/sorting.clj) you can ru
 
 A more interesting (and fun) [guessing game example](/src/examples/clojure/pure_io/guessing.clj) can be run with `lein run -m examples.clojure.pure-io.guessing`
 
-## (Un)License
-Everything here is public domain.
+## License
+
+Copyright © 2023 Michael Marsh
+
+Distributed under the Eclipse Public License version 1.0
